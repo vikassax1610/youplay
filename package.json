@@ -2,7 +2,7 @@
   "name": "youplay",
   "version": "1.0.0",
   "main": "index.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "dev": "nodemon index.js"
   },
@@ -12,5 +12,8 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }

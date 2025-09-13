@@ -7,7 +7,7 @@ import apiResponse from "../utils/apiResponse.js";
 const registerUser = asyncHandler(async (req, res) => {
   const { userName, email, fullName, password } = req.body;
   console.log("email", email);
-  
+
   if (fullName === "") {
     throw new apiError(400, "Full Name is required");
   }
@@ -20,19 +20,26 @@ const registerUser = asyncHandler(async (req, res) => {
   if (password === "") {
     throw new apiError(400, "Password is required");
   }
-  
+
   const existedUser = await User.findOne({
     $or: [{ email }, { userName }], //checking between two value user exist or not
   });
-  
+
   if (existedUser) {
     throw new apiError(409, "User already existed");
   }
-  
+
   // ✅ Fixed: Use req.files instead of req.file
   const avatarLocalPath = req.files?.avatar?.[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
-  
+  // const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
   console.log("req.files:", req.files);
   console.log("req.body:", req.body);
   console.log("avatarLocalPath:", avatarLocalPath); // Add this for debugging
@@ -43,11 +50,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  
+
   if (!avatar) {
     throw new apiError(400, "Avatar is required");
   }
-  
+
   const user = await User.create({
     avatar: avatar.url,
     fullName,
@@ -56,15 +63,15 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImage: coverImage?.url || "",
     password,
   });
-  
+
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-  
+
   if (!createdUser) {
     throw new apiError(500, "Something went wrong while registering the user");
   }
-  
+
   return res
     .status(201)
     .json(new apiResponse(200, createdUser, "User registered successfully"));

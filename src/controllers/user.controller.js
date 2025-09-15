@@ -16,7 +16,8 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
   } catch (error) {
     throw new apiError(
       400,
-      "Something went wrong while generating refresh token and access token"
+      "Something went wrong while generating refresh token and access token",
+      error
     );
   }
 };
@@ -97,7 +98,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { userName, password, email } = req.body;
 
-  if (!userName || !email) {
+  if (!(userName || email)) {
     throw new apiError(400, "Email or User name is required");
   }
   const user = await User.findOne({
@@ -114,11 +115,11 @@ const loginUser = asyncHandler(async (req, res) => {
   const { refreshToken, accessToken } =
     await generateAccessTokenAndRefreshToken(user._id);
   const loggedInUser = await User.findById(user._id).select(
-    "-password , -refreshToken"
+    "-password  -refreshToken"
   );
   const options = {
     httpOnly: true,
-    secure: true,
+    // secure: true,
   };
   return res
     .status(200)
@@ -145,7 +146,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   );
   const options = {
     httpOnly: true,
-    secure: true,
+    // secure: true,
   };
   return res
     .status(200)
@@ -154,4 +155,4 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "User logged out successfully"));
 });
 
-export default { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser };
